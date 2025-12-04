@@ -1,0 +1,410 @@
+:root {
+  color-scheme: light dark;
+  color: rgba(255, 255, 255);
+  background: radial-gradient(circle at center, #1B3B5A 0%, #142B44 50%, #0D1B2A 100%);
+
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  height: 100%;
+  width: 100%;
+}
+
+* {
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  box-sizing: border-box;
+}
+
+a {
+  font-weight: 500;
+  color: #5AC8FA;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #7FDBFF;
+}
+
+a:hover:active {
+  color: #9EEBFF;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+}
+
+#overlays {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.transition-enter-active, .transition-leave-active {
+  transition: opacity 0.5s ease-out;
+}
+
+.transition-leave-from, .transition-enter-to {
+  opacity: 1;
+}
+
+.transition-leave-to, .transition-enter-from {
+  opacity: 0;
+}
+
+.page-center {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.authCard {
+  width: 400px;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #172533;
+  border: solid 2px #0D1B2A;
+  border-radius: 15px;
+}
+
+@media (max-width: 500px) {
+  .authCard {
+    padding-left: 20px;
+    padding-right: 20px;
+    width: 100%;
+    height: 100%;
+    border: none;
+    overflow: auto;
+  }
+}
+
+.mainView {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+}
+
+.channelListContainer {
+  margin-top: 8px;
+  margin-left: 8px;
+  height: calc(100% - 80px);
+  width: 64px;
+  border-radius: 12px;
+  background-color: #1C2B3A;
+  border: solid 2px #24384C;
+}
+
+.channeList {
+  height: calc(100% - 76px);
+  overflow: auto;
+  border-radius: 12px;
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.channeList::-webkit-scrollbar {
+  display: none;
+}
+
+.channeList {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.addChannel {
+  height: 40px;
+  width: 40px;
+  margin-top: 13px;
+  margin-left: 10px;
+  background-color: #5AC8FA;
+  border: solid 2px #4AA3D1;
+  border-radius: 50%;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addChannel:hover {
+  background-color: #7FDBFF;
+}
+
+.addChannel:hover:active {
+  background-color: #4AA3D1;
+}
+
+.addChannel > svg {
+  margin: auto;
+}
+
+.mainContent {
+  flex-grow: 1;
+  height: 100%;
+  display: flex;
+  overflow: auto;
+}
+
+.profileContainer {
+  height: 80px;
+  width: 80px;
+  padding: 8px;
+  position: relative;
+}
+
+.profile {
+  height: 100%;
+  width: 300px;
+  border-radius: 12px;
+  background-color: #1C2B3A;
+  border: solid 2px #24384C;
+
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  
+}
+
+.profile > span {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatar, .channelIcon {
+  background-color: #2f445a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
+
+  position: relative;
+}
+
+.avatarStatus {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+}
+
+.avatar > span, .channelIcon > span {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.channelIcon {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+/* Margin Vertical 12px */
+.m-0 {
+  margin: 0;
+}
+
+.mb-8 {
+  margin-bottom: 8px;
+}
+
+.text-25 {
+  font-size: 25px;
+}
+
+.text-14 {
+  font-size: 14px;
+}
+
+.text-red {
+  color: #E06C75;
+}
+
+/* Button */
+.btn-primary {
+  background-color: #2E4A67;
+  border: none;
+  border-bottom: solid 3px #406183;
+  margin-top: 2px;
+
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+
+  transition: all 0.2s ease-in;
+}
+
+.btn-primary:hover {
+  background-color: #31567a;
+}
+
+.btn-primary:active {
+  background-color: #406183;
+}
+
+.btn-primary:disabled {
+  color: #e0e0e0c2;
+  background-color: #26394d;
+  border-color: #364d63;
+  cursor: not-allowed;
+}
+
+/* Input */
+
+.inputOptionBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  height: 35px;
+  width: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+
+  transition: background-color 0.1s ease-in;
+}
+
+.inputOptionBtn:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.inputOptionBtn:hover:active {
+  background-color: rgba(255,255,255,0.3);
+}
+
+.inputOptionBtn > svg {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.inputContainer {
+  width: 100%;
+  padding: 0px 12px;
+
+  background: #0E1A2B;
+  border: solid 2px #1B2A44;
+  border-radius: 8px;
+
+  transition: all 0.2s ease-in;
+
+  gap: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.inputDisabled {
+  background: #141F33;
+  border-color: #1C2A3E;
+}
+
+.inputFocused {
+  background-color: #1E2F4D;
+  border-color: #4C8DFF;
+}
+
+.inputFocused > .inputContent > span {
+  color: #4C8DFF;
+}
+
+.inputFocused > .inputContent > span,
+.inputNotEmpty > .inputContent > span {
+  transform: translateY(-8px) scale(.75);
+}
+
+.inputContent {
+  position: relative;
+  flex-grow: 1;
+}
+
+.inputContent > span {
+  position: absolute;
+  top: 16px;
+  font-size: 16px;
+
+  transform-origin: top left;
+  transition: all 0.2s ease-in;
+
+  color: #8FA4C2;
+}
+
+.inputContent > input {
+  background: none;
+  border: none;
+  padding: 24px 0px 8px 0px;
+  height: 24px;
+  width: 100%;
+  box-sizing: content-box;
+  color: #ECF3FF;
+}
+
+.inputDisabled > .inputContent > span {
+  color: #6F819B;
+}
+
+.inputDisabled > .inputContent > input {
+  color: #A8B5C9;
+}
+
+.inputContent > input:focus {
+  outline: none;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #FFF;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: spinner-rotation 1s linear infinite;
+}
+
+@keyframes spinner-rotation {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+}
