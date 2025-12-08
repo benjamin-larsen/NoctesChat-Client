@@ -1,6 +1,7 @@
 import { shallowRef, globalProperties } from 'noctes.jsx'
 import { request } from './http.js';
 import { sleep } from './utils.js';
+import { channels, channelMessages, channelStatuses } from './channels.js';
 
 export const auth = shallowRef(
   localStorage.getItem("auth-token") || null
@@ -22,9 +23,12 @@ export function setAuth(token) {
   globalProperties.$router.navigate("/");
 }
 
-function unsetAuth() {
+export function unsetAuth() {
   localStorage.removeItem("auth-token");
   auth.value = null;
+  channels.clear();
+  channelMessages.clear();
+  channelStatuses.clear();
 
   globalProperties.$router.navigate("/login");
 }
@@ -60,9 +64,10 @@ export async function ensureLoadUser() {
 
       if (resp.status != 200) throw new AuthError("Unable to fetch chanels.");
 
-      authUser.value = {
-        user,
-        channels: resp.body.channels
+      authUser.value = user;
+
+      for (const channel of resp.body.channels) {
+        channels.set(channel.id, channel);
       }
     } catch(e) {
       console.log("Error while trying to setup authentication.", e);
@@ -76,5 +81,4 @@ export async function ensureLoadUser() {
 
     if (!authUser.value) await sleep(5000);
   }
-
 }

@@ -1,14 +1,16 @@
 import { RouterView, RouterLink } from "noctes.jsx-router"
 import Avatar from "./Avatar.jsx";
 import ChannelIcon from "./ChannelIcon.jsx";
-import { ensureLoadUser, authUser, authError } from "../services/auth"
+import { ensureLoadUser, authUser, authError } from "../services/auth.js"
+import { channels } from "../services/channels.js";
+import { connState, WS_STATES } from "../services/ws.js";
 import Tooltip from "./Tooltip.jsx";
 
 export default {
   render() {
     ensureLoadUser();
 
-    if (!authUser.value) {
+    if (!authUser.value || connState.value !== WS_STATES.active) {
       return <>
         <div class="page-center">
           <span class="loader"></span>
@@ -17,7 +19,7 @@ export default {
       </>
     }
 
-    const { user, channels } = authUser.value;
+    const user = authUser.value;
 
     return <>
       <div className="mainView">
@@ -25,7 +27,7 @@ export default {
           <div className="channelListContainer">
             <div className="channeList">
               {
-                channels.map(c => <ChannelIcon key={c.id} name={c.name} id={c.id} />)
+                [...channels.values()].map(c => <ChannelIcon key={c.id} name={c.name} id={c.id} />)
               }
             </div>
             <Tooltip nSlot="show, hide, tempRef">

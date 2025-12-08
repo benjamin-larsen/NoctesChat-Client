@@ -2,6 +2,7 @@ import { reactive } from "noctes.jsx";
 import { request } from "./http.js";
 
 // just use channels from auth
+// dont load channels,
 
 // null = loading, doesnt exist = not loaded, object = loaded
 export const channels = reactive(new Map());
@@ -16,19 +17,28 @@ class LoadError extends Error {
   }
 }
 
+async function getOrFetchChannel(channelId) {
+  const existing = channels.get(channelId);
+  if (existing) return existing;
+
+  const resp = await request({
+    url: `/channels/${channelId}`,
+    includeAuth: true
+  })
+
+  if (resp.status === 404) throw new LoadError("Unknown Channel");
+  if (resp.status !== 200) throw new LoadError("Unable to fetch channel");
+
+  channels.set(channelId, resp.body);
+
+  return resp.body;
+}
+
 async function loadChannel(channelId, status) {
   try {
-    let resp = await request({
-      url: `/channels/${channelId}`,
-      includeAuth: true
-    })
+    const channel = await getOrFetchChannel(channelId);
 
-    if (resp.status === 404) throw new LoadError("Unknown Channel");
-    if (resp.status !== 200) throw new LoadError("Unable to fetch channel");
-
-    const channel = resp.body;
-
-    resp = await request({
+    const resp = await request({
       url: `/channels/${channelId}/messages`,
       includeAuth: true
     })
@@ -38,7 +48,6 @@ async function loadChannel(channelId, status) {
     const messages = resp.body;
 
     status.state = "loaded";
-    channels.set(channelId, channel);
     channelMessages.set(channelId, messages);
   } catch(e) {
     console.log("Error occured while loading channel.", e);
