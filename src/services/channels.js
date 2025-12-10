@@ -1,4 +1,4 @@
-import { reactive } from "noctes.jsx";
+import { reactive, shallowReactive, ref } from "noctes.jsx";
 import { request } from "./http.js";
 
 // just use channels from auth
@@ -8,6 +8,35 @@ import { request } from "./http.js";
 export const channels = reactive(new Map());
 export const channelMessages = reactive(new Map());
 export const channelStatuses = reactive(new Map());
+
+export function sortMessages(messages) {
+  let dedupe = new Set();
+
+  const oldTop = messages[0];
+
+  const newArr = messages.filter(m => {
+    if (m === null || typeof m !== "object") return false;
+    if (dedupe.has(m.id)) return false;
+    dedupe.add(m.id);
+
+    return true;
+  }).sort((a, b) => {
+    const aInt = BigInt(a.id);
+    const bInt = BigInt(b.id);
+
+    if (aInt > bInt) return 1;
+    if (aInt < bInt) return -1;
+
+    return 0;
+  });
+  
+  const newTop = newArr[0];
+
+  return {
+    messages: newArr,
+    addedTop: newTop !== oldTop
+  }
+}
 
 window.channels = channels;
 
@@ -36,7 +65,7 @@ async function getOrFetchChannel(channelId) {
 
 async function loadChannel(channelId, status) {
   try {
-    const channel = await getOrFetchChannel(channelId);
+    await getOrFetchChannel(channelId);
 
     const resp = await request({
       url: `/channels/${channelId}/messages`,
@@ -45,16 +74,48 @@ async function loadChannel(channelId, status) {
 
     if (resp.status !== 200) throw new LoadError(resp.body.error || "Unable to fetch messages");
 
-    const messages = resp.body;
+    const { messages, has_more } = resp.body;
 
     status.state = "loaded";
-    channelMessages.set(channelId, messages);
+    status.msgBox = ref("");
+    status.scroll = null;
+    channelMessages.set(channelId, shallowReactive({
+      messages: sortMessages(messages).messages,
+      has_more: !!has_more,
+      isLoading: false,
+      addedTop: false
+    }));
   } catch(e) {
     console.log("Error occured while loading channel.", e);
 
     status.state = "failed";
     status.error = e instanceof LoadError ? `Error: ${e.message}` : "Unknown Error";
+    status.msgBox = undefined;
+    status.scroll = null;
   }
+}
+
+export async function sendMessage(channelId) {
+  const status = channelStatuses.get(channelId);
+  if (!status) return;
+  if (!status.msgBox) return;
+
+  const msgBox = status.msgBox;
+  const msgContent = msgBox.value.trim();
+  
+  if (!msgContent) return;
+
+  msgBox.value = "";
+  status.scroll = null;
+
+  await request({
+    url: `/channels/${channelId}/messages`,
+    method: "POST",
+    body: {
+      content: msgContent
+    },
+    includeAuth: true
+  })
 }
 
 export function retryLoadChannel(channelId) {
@@ -63,6 +124,8 @@ export function retryLoadChannel(channelId) {
 
   status.state = "loading";
   status.error = undefined;
+  status.msgBox = undefined;
+  status.scroll = null;
 
   loadChannel(channelId, status);
 }
@@ -80,4 +143,37 @@ export function ensureChannelLoaded(channelId) {
   loadChannel(channelId, status);
 
   return status;
+}
+
+export async function loadMore(channelId) {
+  let msgObj = channelMessages.get(channelId);
+  if (!msgObj) return;
+  if (msgObj.isLoading || !msgObj.has_more) return;
+
+  const { messages } = msgObj;
+  if (messages.length <= 0) return;
+
+  const lastMessageId = messages[0].id;
+
+  msgObj.isLoading = true;
+  msgObj.addedTop = true;
+
+  try {
+    const resp = await request({
+      url: `/channels/${channelId}/messages?after=${lastMessageId}`,
+      includeAuth: true
+    })
+
+    if (resp.status !== 200) return;
+
+    messages.push(...resp.body.messages);
+
+    const sorted = sortMessages(messages);
+
+    msgObj.messages = sorted.messages;
+    msgObj.addedTop = sorted.addedTop;
+    msgObj.has_more = !!resp.body.has_more;
+  } finally {
+    msgObj.isLoading = false;
+  }
 }

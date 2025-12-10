@@ -1,7 +1,7 @@
 import { ref, watch } from "noctes.jsx";
 
 import { auth, unsetAuth } from "./auth.js"
-import { channels, channelMessages, channelStatuses } from "./channels.js";
+import { channels, channelMessages, channelStatuses, sortMessages } from "./channels.js";
 
 const WS_URL = import.meta.env.DEV ? "ws://localhost:5117/ws" : "/ws"
 
@@ -83,10 +83,17 @@ class WebSocketManager {
         }
 
         case "push_message": {
-          const messages = channelMessages.get(json.channel);
-          if (!messages) return;
+          const msgObj = channelMessages.get(json.channel);
+          if (!msgObj) return;
 
-          messages.messages.push(json.message);
+          const { messages } = msgObj;
+
+          messages.push(json.message);
+
+          const sorted = sortMessages(messages);
+
+          msgObj.messages = sorted.messages;
+          msgObj.addedTop = sorted.addedTop;
 
           break;
         }

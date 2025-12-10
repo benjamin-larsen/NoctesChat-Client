@@ -1,4 +1,6 @@
-import { ensureChannelLoaded, channels, channelMessages, retryLoadChannel } from "../services/channels";
+import { ensureChannelLoaded, channels, channelMessages, retryLoadChannel, sendMessage } from "../services/channels";
+import InputBox from "./InputBox.jsx";
+import MessageContainer from "./MessageContainer.jsx";
 
 export default {
   render(ctx) {
@@ -23,8 +25,17 @@ export default {
     }
 
     const channel = channels.get(channelId);
-    const messages = channelMessages.get(channelId) || { messages: [], has_more: false };
-  
-    return <>${JSON.stringify(channel, null, "\t")}${JSON.stringify(messages, null, "\t")}</>
+    const msgObj = channelMessages.get(channelId) || { messages: [], has_more: false, isLoading: false };
+    return <>
+      <div class="channelContainer">
+        <div class="channelInfo">
+          <span class="name">${channel.name}</span>
+        </div>
+        <MessageContainer messageInfo={msgObj} status={status} channel={channelId} />
+        <div class="messageBox">
+          <InputBox onEnter={() => {sendMessage(channelId)}} nModel={status.msgBox} label="Message" />
+        </div>
+      </div>
+    </>
   }
 }

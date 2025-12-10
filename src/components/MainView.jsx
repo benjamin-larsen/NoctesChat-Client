@@ -46,7 +46,7 @@ export default {
               </slot>
               <div className="profile" ref={tempRef} onMouseenter={show} onMouseleave={hide}>
                 <Avatar username={user.username} status="#4CD964" />
-                <div style="display: flex; flex-direction: column; line-height: 1;">
+                <div class="profileInfo">
                   <span>${user.username}</span>
                   <span style="font-size: 14px; color: #c5c5c5ff">Online</span>
                 </div>
