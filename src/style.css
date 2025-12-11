@@ -190,7 +190,7 @@ h1 {
 
   display: flex;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -206,6 +206,7 @@ h1 {
   display: flex;
   flex-direction: column;
   line-height: 1;
+  overflow: hidden;
 }
 
 .avatar, .channelIcon {
@@ -263,11 +264,43 @@ h1 {
   padding: 16px;
 }
 
-.messagesContainer {
+.messageScroller {
   flex-grow: 1;
-  width: 100%;
   overflow: auto;
-  padding-bottom: 16px;
+}
+
+.messageContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  min-height: 100%;
+}
+
+.messageList {
+  width: 100%;
+  padding-bottom: 12px;
+}
+
+.ellipsis-anim span {
+  font-size: 16px;
+  opacity: 0;
+  animation: ellipsis-anim 1s infinite;
+}
+
+.ellipsis-anim span:nth-child(1) {
+  animation-delay: 0.0s;
+}
+.ellipsis-anim span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.ellipsis-anim span:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes ellipsis-anim {
+      0% { opacity: 0; }
+     50% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 .messageBox {
@@ -275,7 +308,7 @@ h1 {
   align-self: flex-end;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 700px) {
   .messageBox {
     width: 100%;
   }
@@ -286,30 +319,18 @@ h1 {
 
   .profile {
     width: 64px;
-    overflow: hidden;
-    transition: width 0.5s;
     z-index: 0;
   }
 
   .profileInfo {
-    opacity: 0;
-    transition: opacity 0.5s;
-  }
-
-  .profile:hover {
-    width: 300px;
-  }
-
-  .profile:hover > .profileInfo {
-    opacity: 1;
+    display: none;
   }
 }
 
 .message {
   display: flex;
   margin-top: 16px;
-  padding: 0 8px;
-  padding-top: 8px;
+  padding: 8px 8px 4px;
 
   border-radius: 12px;
 }
@@ -319,7 +340,7 @@ h1 {
 }
 
 .leadingMessage {
-  padding-top: 0px;
+  padding: 4px 8px;
   margin-top: 0px;
 }
 
@@ -327,11 +348,14 @@ h1 {
   display: flex;
   flex-direction: column;
   padding-left: 8px;
+  overflow: hidden;
 }
 
 .messageInfo > span {
   font-size: 16px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .messageInfo > p {
