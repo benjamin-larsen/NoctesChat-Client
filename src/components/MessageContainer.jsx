@@ -2,8 +2,8 @@ import { ref, nextTick } from "noctes.jsx";
 import { loadMore } from "../services/channels.js";
 import Avatar from "./Avatar.jsx";
 
-async function updateScroll(ctx) {
-  await nextTick();
+async function updateScroll(ctx, skipTick = false) {
+  if (!skipTick) await nextTick();
 
   const { channel, status: { scroll }, messageInfo: { addedTop } } = ctx.props;
 
@@ -14,10 +14,10 @@ async function updateScroll(ctx) {
   if (!el) return;
 
   el.scrollTop = scroll === null ?
-    el.scrollHeight - el.clientHeight :
-      (ctx.lastHeight !== null && addedTop) ?
-      el.scrollHeight - ctx.lastHeight + scroll :
-  scroll;
+  el.scrollHeight - el.clientHeight :
+    (ctx.lastHeight !== null && addedTop) ?
+    el.scrollHeight - ctx.lastHeight + scroll :
+    scroll;
 
   if (scroll !== null) {
     ctx.lastHeight = el.scrollHeight;
@@ -30,10 +30,23 @@ export default {
     ctx.el = ref(null);
     ctx.lastHeight = null;
     ctx.lastChannelId = null;
+
+    ctx.updateScroll = updateScroll.bind(null, ctx, true);
   },
 
-  onMounted: updateScroll,
-  onUpdated: updateScroll,
+  onMounted(ctx) {
+    updateScroll(ctx, false);
+
+    window.addEventListener("resize", ctx.updateScroll);
+  },
+
+  onUpdated(ctx) {
+    updateScroll(ctx, false);
+  },
+
+  onDestroy(ctx) {
+    window.removeEventListener("resize", ctx.updateScroll);
+  },
   
   render(ctx, props) {
     const { messageInfo } = props;
@@ -42,61 +55,65 @@ export default {
     let seqCounter = 0;
 
     return <>
-      <div class="messagesContainer" ref={ctx.el} onScroll={() => {
-        const el = ctx.el.value;
-        if (!el) return;
+    <div class="messageScroller" ref={ctx.el} onScroll={() => {
+          const el = ctx.el.value;
+          if (!el) return;
 
-        if (el.scrollTop === 0) {
-          loadMore(ctx.props.channel);
-        }
+          if (el.scrollTop === 0) {
+            loadMore(ctx.props.channel);
+          }
 
-        if (el.scrollTop >= (el.scrollHeight - el.clientHeight)) {
-          ctx.props.status.scroll = null
-        } else {
-          ctx.lastHeight = el.scrollHeight;
-          ctx.props.status.scroll = el.scrollTop
-        }
-      }}>
-        {
-          messageInfo.isLoading ? <div key="topMsg" class="topMessage"><span class="loader"></span></div> : !messageInfo.has_more ? <div key="topMsg" class="topMessage">You've reached the start of this channel.</div> : null
-        }
-        {
-          messageInfo.messages.map(msg =>
+          if (Math.ceil(el.scrollTop) >= (el.scrollHeight - el.clientHeight)) {
+            ctx.props.status.scroll = null
+          } else {
+            ctx.lastHeight = el.scrollHeight;
+            ctx.props.status.scroll = el.scrollTop
+          }
+        }}>
+      <div class="messageContainer">
+        <div class="messageList">
           {
-            try {
-              if (seqCounter >= 5) {
-                seqCounter = 1;
-                lastMsg = null;
-              }
+            messageInfo.isLoading ? <div key="topMsg" class="topMessage"><span class="loader"></span></div> : !messageInfo.has_more ? <div key="topMsg" class="topMessage">You've reached the start of this channel.</div> : null
+          }
+          {
+            messageInfo.messages.map(msg =>
+            {
+              try {
+                if (seqCounter >= 5) {
+                  seqCounter = 1;
+                  lastMsg = null;
+                }
 
-              if (lastMsg && lastMsg.author && msg.author && msg.author.id === lastMsg.author.id) {
-                seqCounter++;
+                if (lastMsg && lastMsg.author && msg.author && msg.author.id === lastMsg.author.id) {
+                  seqCounter++;
 
-                return <div key={msg.id} class="message leadingMessage">
-                  <span style="width: 40px;"></span>
+                  return <div key={msg.id} class="message leadingMessage">
+                    <span style="width: 40px; flex-shrink: 0;"></span>
+                    <div class="messageInfo">
+                      <p>${msg.content}</p>
+                    </div>
+                  </div>
+                } else {
+                  seqCounter = 1;
+                }
+
+                return <div key={msg.id} class="message">
+                  <Avatar username={msg.author ? msg.author.username : "D"} status="#4CD964" />
                   <div class="messageInfo">
-                    <p style="font-size: 16px; margin: 0; white-space: break-spaces; word-wrap: anywhere;">${msg.content}</p>
+                    <span>
+                      ${msg.author ? msg.author.username : "Deleted User"}
+                    </span>
+                    <p>${msg.content.trim()}</p>
                   </div>
                 </div>
-              } else {
-                seqCounter = 1;
+              } finally {
+                lastMsg = msg;
               }
-
-              return <div key={msg.id} class="message">
-                <Avatar username={msg.author ? msg.author.username : "D"} status="#4CD964" />
-                <div class="messageInfo">
-                  <span>
-                    ${msg.author ? msg.author.username : "Deleted User"}
-                  </span>
-                  <p>${msg.content.trim()}</p>
-                </div>
-              </div>
-            } finally {
-              lastMsg = msg;
-            }
-          })
-        }
+            })
+          }
+        </div>
       </div>
+    </div>
     </>
   }
 }
