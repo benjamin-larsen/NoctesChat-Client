@@ -1,4 +1,4 @@
-import { ensureChannelLoaded, channels, channelMessages, retryLoadChannel, sendMessage } from "../services/channels";
+import { ensureChannelLoaded, channels, channelMessages, retryLoadChannel, sendMessage, evalTyping } from "../services/channels";
 import InputBox from "./InputBox.jsx";
 import MessageContainer from "./MessageContainer.jsx";
 
@@ -33,7 +33,15 @@ export default {
         </div>
         <MessageContainer messageInfo={msgObj} status={status} channel={channelId} />
         <div class="messageBox">
-          <InputBox onEnter={() => {sendMessage(channelId)}} nModel={status.msgBox} label="Message" />
+          <div style="font-size: 12px; padding: 4px 0; line-height: 1" class="ellipsis-anim">{
+            status.typing.size > 0 ? <>
+              Someone is typing 
+              <span>.</span>
+              <span>.</span>
+              <span>.</span>
+            </> : null
+          }</div>
+          <InputBox onInput={() => {evalTyping(channelId)}} onEnter={() => {sendMessage(channelId)}} nModel={status.msgBox} label="Message" />
         </div>
       </div>
     </>

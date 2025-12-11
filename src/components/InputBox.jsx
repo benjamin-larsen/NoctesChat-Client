@@ -23,6 +23,8 @@ export default {
     ctx.toggled = ref(false);
 
     watch(() => ctx.model.value && ctx.model.value.value, (next, prev) => {
+      ctx.$emit("input", next);
+
       ctx.isEmpty.value = !next;
 
       ctx.resize();

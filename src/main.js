@@ -3,8 +3,6 @@ import './style.css'
 import { auth } from './services/auth.js'
 import { request } from './services/http.js'
 
-window.request = request
-
 import router, { RouterView } from 'noctes.jsx-router'
 
 import LoginPage from './components/LoginPage.jsx'
