@@ -1,5 +1,6 @@
 import { reactive, shallowReactive, ref } from "noctes.jsx";
 import { request } from "./http.js";
+import { sendWSMessage } from "./ws.js";
 
 // just use channels from auth
 // dont load channels,
@@ -78,6 +79,8 @@ async function loadChannel(channelId, status) {
 
     status.state = "loaded";
     status.msgBox = ref("");
+    status.typing = shallowReactive(new Map());
+    status.typingSince = null;
     status.scroll = null;
     channelMessages.set(channelId, shallowReactive({
       messages: sortMessages(messages).messages,
@@ -91,6 +94,8 @@ async function loadChannel(channelId, status) {
     status.state = "failed";
     status.error = e instanceof LoadError ? `Error: ${e.message}` : "Unknown Error";
     status.msgBox = undefined;
+    status.typing = null;
+    status.typingSince = null;
     status.scroll = null;
   }
 }
@@ -118,6 +123,48 @@ export async function sendMessage(channelId) {
   })
 }
 
+export function evalTyping(channelId) {
+  const status = channelStatuses.get(channelId);
+
+  if (!status) return;
+  if (!status.typing || !status.msgBox) return;
+
+  const wasTyping = status.typingSince !== null;
+  const shouldBeTyping = !!status.msgBox.value.trim();
+
+  if (shouldBeTyping !== wasTyping) {
+    status.typingSince = shouldBeTyping ? Date.now() : null;
+
+    sendWSMessage({
+      type: shouldBeTyping ? "start_typing" : "stop_typing",
+      data: {
+        channel: channelId
+      }
+    });
+  } else if (wasTyping) {
+    status.typingSince = Date.now();
+  }
+}
+
+setInterval(() => {
+  const time = Date.now();
+
+  for (const [channelId, status] of channelStatuses) {
+    if (!status.typing || status.typingSince === null) continue;
+
+    if ((time - status.typingSince) >= 5000) {
+      status.typingSince = null;
+
+      sendWSMessage({
+        type: "stop_typing",
+        data: {
+          channel: channelId
+        }
+      });
+    }
+  }
+}, 2500);
+
 export function retryLoadChannel(channelId) {
   let status = channelStatuses.get(channelId);
   if (!status) return false;
@@ -125,6 +172,8 @@ export function retryLoadChannel(channelId) {
   status.state = "loading";
   status.error = undefined;
   status.msgBox = undefined;
+  status.typing = null;
+  status.typingSince = null;
   status.scroll = null;
 
   loadChannel(channelId, status);

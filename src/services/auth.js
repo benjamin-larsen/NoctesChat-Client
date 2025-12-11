@@ -2,6 +2,7 @@ import { shallowRef, globalProperties } from 'noctes.jsx'
 import { request } from './http.js';
 import { sleep } from './utils.js';
 import { channels, channelMessages, channelStatuses } from './channels.js';
+import SetupWS from './ws.js'
 
 export const auth = shallowRef(
   localStorage.getItem("auth-token") || null
@@ -82,3 +83,5 @@ export async function ensureLoadUser() {
     if (!authUser.value) await sleep(5000);
   }
 }
+
+SetupWS();

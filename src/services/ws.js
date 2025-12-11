@@ -1,6 +1,6 @@
 import { ref, watch } from "noctes.jsx";
 
-import { auth, unsetAuth } from "./auth.js"
+import { auth, unsetAuth, authUser } from "./auth.js"
 import { channels, channelMessages, channelStatuses, sortMessages } from "./channels.js";
 
 const WS_URL = import.meta.env.DEV ? "ws://localhost:5117/ws" : "/ws"
@@ -17,6 +17,7 @@ class WebSocketManager {
   constructor(url) {
     this.url = url;
     this.socket = null;
+    this.authUser = null;
 
     this.openHook = () => this.onOpen();
     this.closeHook = () => this.onClose();
@@ -26,6 +27,7 @@ class WebSocketManager {
   onOpen() {
     console.log("WebSocket Open")
 
+    this.authUser = authUser.value;
     this.socket.send(JSON.stringify({
       type: "login",
       data: {
@@ -36,8 +38,9 @@ class WebSocketManager {
 
   onClose() {
     this.socket = null;
+    this.authUser = null;
 
-    if (!auth.value) {
+    if (!authUser.value) {
       connState.value = WS_STATES.inactive;
       return;
     }
@@ -69,6 +72,26 @@ class WebSocketManager {
       }
     } else if (connState.value == WS_STATES.active) {
       switch (json.type) {
+        case "start_typing": {
+          if (json.member == this.authUser.id) return;
+          
+          const channelState = channelStatuses.get(json.channel);
+          if (!channelState || !channelState.typing) return;
+
+          channelState.typing.set(json.member, Date.now());
+          break;
+        }
+
+        case "stop_typing": {
+          if (json.member == this.authUser.id) return;
+
+          const channelState = channelStatuses.get(json.channel);
+          if (!channelState || !channelState.typing) return;
+
+          channelState.typing.delete(json.member);
+          break;
+        }
+
         case "update_channel":
         case "push_channel": {
           channels.set(json.channel.id, json.channel);
@@ -112,7 +135,7 @@ class WebSocketManager {
   }
 
   attemptConnection() {
-    if (!auth.value) return;
+    if (!authUser.value) return;
 
     this.abort();
 
@@ -126,12 +149,25 @@ class WebSocketManager {
   }
 }
 
-const wsState = new WebSocketManager(WS_URL);
+let wsState;
 
-watch(auth, (next) => {
-  wsState.abort();
+export function sendWSMessage(message) {
+  try {
+    if (!wsState.socket) return;
+    if (connState.value !== WS_STATES.active) return;
 
-  if (next) {
-    wsState.attemptConnection();
-  }
-}, { immediate: true, global: true })
+    wsState.socket.send(JSON.stringify(message))
+  } catch {}
+}
+
+export default function setup() {
+  wsState = new WebSocketManager(WS_URL);
+
+  watch(authUser, (next) => {
+    wsState.abort();
+
+    if (next) {
+      wsState.attemptConnection();
+    }
+  }, { immediate: true, global: true })
+}
