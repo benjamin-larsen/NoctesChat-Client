@@ -53,3 +53,19 @@ export async function request({
     }
   }
 }
+
+export async function getUserByUsername(username) {
+  const resp = await request({
+    url: `/usernames/${username}`
+  })
+
+  if (resp.status !== 200) return {
+    user: null,
+    error: typeof resp.body.error === "string" ? resp.body.error : "Unknown Error"
+  };
+
+  return {
+    user: resp.body,
+    error: null
+  };
+}
