@@ -45,15 +45,17 @@ export default {
         }} tabindex="-1" onClick={() => {if (ctx.props.disabled) return; ctx.inputEl.value.focus()}}>
         <div className="inputContent">
           <span style="top: 17px;">${props.label}</span>
-          <textarea
-          disabled={props.disabled}
-          onFocus={() => {ctx.isFocused.value = true}}
-          onBlur={() => {ctx.isFocused.value = false}}
-          onClick={(e) => e.stopPropagation()}
-          onKeydown={(e) => {if (e.which !== 13 || e.shiftKey) return; e.preventDefault(); ctx.$emit("enter");}}
-          ref={ctx.inputEl}
-          tabindex="0"
-          nModel={ctx.model.value} />
+          <div>
+            <textarea
+            disabled={props.disabled}
+            onFocus={() => {ctx.isFocused.value = true}}
+            onBlur={() => {ctx.isFocused.value = false}}
+            onClick={(e) => e.stopPropagation()}
+            onKeydown={(e) => {if (e.which !== 13 || e.shiftKey) return; e.preventDefault(); ctx.$emit("enter");}}
+            ref={ctx.inputEl}
+            tabindex="0"
+            nModel={ctx.model.value} />
+          </div>
         </div>
       </div>
     </>

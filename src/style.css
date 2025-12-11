@@ -489,13 +489,21 @@ h1 {
   color: #ECF3FF;
 }
 
-.inputContent > textarea {
+.inputContent > div {
+  margin: 26px 0px 8px 0px;
+  display: flex;
+}
+
+.inputContent textarea {
   background: none;
   border: none;
-  margin: 26px 0px 8px 0px;
+  margin: 0;
   padding: 0;
+  font-size: 16px;
+  font-weight: 400;
   min-height: 24px;
   max-height: 200px;
+  height: 100%;
   width: 100%;
   resize: none;
   box-sizing: content-box;
@@ -514,11 +522,11 @@ h1 {
   outline: none;
 }
 
-.inputDisabled > .inputContent > textarea {
+.inputDisabled > .inputContent textarea {
   color: #A8B5C9;
 }
 
-.inputContent > textarea:focus {
+.inputContent textarea:focus {
   outline: none;
 }
 
