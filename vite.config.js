@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [NoctesPlugin()],
   base: "/",
   build: {
-    outDir: "../NoctesChat/wwwroot",
+    outDir: "./dist",
     emptyOutDir: true
   }
 })
