@@ -1,6 +1,7 @@
 import { ref, watch } from "noctes.jsx"
 import { RouterLink } from "noctes.jsx-router";
 import Input from './Input.jsx'
+import { request } from "../services/http.js";
 import { setAuth } from "../services/auth.js";
 
 function validate(username, email, password) {
