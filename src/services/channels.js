@@ -226,3 +226,44 @@ export async function loadMore(channelId) {
     msgObj.isLoading = false;
   }
 }
+
+// Make this cancellable
+export async function syncChannel(channelId) {
+  let status = channelStatuses.get(channelId);
+  if (!status) return false;
+
+  let msgObj = channelMessages.get(channelId);
+  if (!msgObj) return;
+
+  let hasMore = true;
+  let isAsc = true;
+
+  while (hasMore) {
+    const lastMessage = isAsc ? msgObj.messages[msgObj.messages.length - 1] : msgObj.messages[0];
+
+    if (!lastMessage) isAsc = false;
+
+    const resp = await request({
+      url: `/channels/${channelId}/messages${lastMessage ? `?${isAsc ? "before" : "after"}=${lastMessage.id}` : ''}`,
+      includeAuth: true
+    })
+
+    if (resp.status !== 200) {
+      console.warn(`Failed to resync channel "${channelId}"`);
+      break;
+    }
+
+    msgObj.messages.push(...resp.body.messages);
+
+    const sorted = sortMessages(msgObj.messages);
+
+    msgObj.messages = sorted.messages;
+    msgObj.addedTop = sorted.addedTop;
+
+    hasMore = resp.body.has_more;
+  }
+
+  if (status.state === "unsynced") {
+    status.state = "loaded";
+  }
+}

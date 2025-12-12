@@ -1,7 +1,7 @@
 import { ref, watch } from "noctes.jsx";
 
 import { auth, unsetAuth, authUser } from "./auth.js"
-import { channels, channelMessages, channelStatuses, sortMessages } from "./channels.js";
+import { channels, channelMessages, channelStatuses, sortMessages, syncChannel } from "./channels.js";
 
 const WS_URL = import.meta.env.DEV ? "ws://localhost:5117/ws" : "/ws"
 
@@ -47,6 +47,11 @@ class WebSocketManager {
 
     connState.value = WS_STATES.loading;
 
+    for (const [_, status] of channelStatuses) {
+      if (status.state !== "loaded") continue;
+      status.state = "unsynced";
+    }
+
     console.log("WebSocket disconnected")
   
     setTimeout(() => this.attemptConnection(), 5000);
@@ -60,6 +65,11 @@ class WebSocketManager {
         case "auth_ack": {
           connState.value = WS_STATES.active;
           console.log("WebSocket Authenticated")
+
+          for (const [channelId, status] of channelStatuses) {
+            if (status.state !== "unsynced") continue;
+            syncChannel(channelId);
+          }
           break;
         }
 

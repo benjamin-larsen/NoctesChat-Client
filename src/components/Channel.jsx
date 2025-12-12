@@ -8,7 +8,7 @@ export default {
 
     const status = ensureChannelLoaded(channelId);
 
-    if (status.state === "loading") {
+    if (status.state === "loading" || status.state === "unsynced") {
       return <>
         <div class="page-center">
           <span class="loader"></span>
