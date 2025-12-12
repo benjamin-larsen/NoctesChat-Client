@@ -2,6 +2,14 @@ import { nModel, ref, shallowReactive, watch } from "noctes.jsx"
 import Avatar from "./Avatar";
 import Tooltip from "./Tooltip.jsx";
 
+function remove(arr, item) {
+  const index = arr.findIndex(t => t.value === item);
+
+  if (index != -1) {
+    arr.splice(index, 1);
+  }
+}
+
 export default {
   methods: {
     addTag() {
@@ -78,6 +86,7 @@ export default {
                   <Avatar username={t.value} style="height: 20px; width: 20px; font-size: 12px;"></Avatar>
                 }
                 ${t.value}
+                <svg onClick={() => {remove(props.nModel, t.value)}} class="closeBtn" xmlns="http://www.w3.org/2000/svg" height="17px" viewBox="0 -960 960 960" width="17px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
                 </span>)
             }
             <input
