@@ -11,6 +11,10 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "@lexical/history": "^0.39.0",
+    "@lexical/markdown": "^0.39.0",
+    "@lexical/plain-text": "^0.39.0",
+    "lexical": "^0.39.0",
     "noctes.jsx": "github:benjamin-larsen/Noctes.jsx",
     "noctes.jsx-router": "github:benjamin-larsen/noctes.jsx-router"
   }

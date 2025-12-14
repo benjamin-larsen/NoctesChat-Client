@@ -1,4 +1,6 @@
 import { nextTick, nModel, ref, shallowReactive, watch } from "noctes.jsx"
+import { $getRoot } from "lexical";
+import { setMsgBoxRoot, unsetMsgBoxRoot, editor, idleSwap, dispatchSwap, contextSwap, isSwapping } from "../services/messages";
 
 export default {
   methods: {
@@ -10,6 +12,14 @@ export default {
 
       el.style.height = "1px"
       el.style.height = `${el.scrollHeight}px`
+    },
+
+    textUpdate(next) {
+      const ctx = this;
+
+      if (!isSwapping()) ctx.$emit("input", next);
+
+      ctx.isEmpty.value = !next;
     }
   },
 
@@ -22,17 +32,30 @@ export default {
     });
     ctx.toggled = ref(false);
 
-    watch(() => ctx.model.value && ctx.model.value.value, (next, prev) => {
-      ctx.$emit("input", next);
+    // context switch first
 
-      ctx.isEmpty.value = !next;
+    dispatchSwap(props.nModel);
 
-      ctx.resize();
-    }, { immediate: true })
+    editor.read(() => {
+      const root = $getRoot();
+      ctx.isEmpty.value = !root.getTextContent();
+    });
+  },
+
+  onMounted(ctx) {
+    setMsgBoxRoot(ctx.inputEl.value, ctx);
+  },
+
+  onDestroy() {
+    idleSwap();
+    unsetMsgBoxRoot();
   },
 
   onUpdated(ctx, props) {
-    ctx.model.value = props.nModel;
+    if (ctx.model.value !== props.nModel) {
+      contextSwap(props.nModel);
+      ctx.model.value = props.nModel;
+    }
   },
 
   render(ctx, props) {
@@ -45,17 +68,15 @@ export default {
         }} tabindex="-1" onClick={() => {if (ctx.props.disabled) return; ctx.inputEl.value.focus()}}>
         <div className="inputContent">
           <span style="top: 17px;">${props.label}</span>
-          <div>
-            <textarea
-            disabled={props.disabled}
-            onFocus={() => {ctx.isFocused.value = true}}
-            onBlur={() => {ctx.isFocused.value = false}}
-            onClick={(e) => e.stopPropagation()}
-            onKeydown={(e) => {if (e.which !== 13 || e.shiftKey) return; e.preventDefault(); ctx.$emit("enter");}}
-            ref={ctx.inputEl}
-            tabindex="0"
-            nModel={ctx.model.value} />
-          </div>
+            <div
+              class="msgBox"
+              contentEditable
+              ref={ctx.inputEl}
+              onFocus={() => {ctx.isFocused.value = true}}
+              onBlur={() => {ctx.isFocused.value = false}}
+              onClick={(e) => e.stopPropagation()}
+              tabindex="0"
+            />
         </div>
       </div>
     </>

@@ -1,4 +1,5 @@
-import { ensureChannelLoaded, channels, channelMessages, retryLoadChannel, sendMessage, evalTyping } from "../services/channels";
+import { ensureChannelLoaded, channels, channelMessages, retryLoadChannel, evalTyping } from "../services/channels.js";
+import { sendMessage } from "../services/messages.js";
 import InputBox from "./InputBox.jsx";
 import MessageContainer from "./MessageContainer.jsx";
 
@@ -41,7 +42,7 @@ export default {
               <span>.</span>
             </> : null
           }</div>
-          <InputBox onInput={() => {evalTyping(channelId)}} onEnter={() => {sendMessage(channelId)}} nModel={status.msgBox} label="Message" />
+          <InputBox onInput={(next) => {evalTyping(channelId, next)}} onEnter={(msg) => {sendMessage(channelId, msg)}} nModel={status.msgBox} label="Message" />
         </div>
       </div>
     </>

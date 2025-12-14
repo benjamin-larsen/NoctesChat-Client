@@ -1,4 +1,4 @@
-import { reactive, shallowReactive, ref } from "noctes.jsx";
+import { reactive, shallowReactive, shallowRef } from "noctes.jsx";
 import { request } from "./http.js";
 import { sendWSMessage } from "./ws.js";
 
@@ -78,7 +78,7 @@ async function loadChannel(channelId, status) {
     const { messages, has_more } = resp.body;
 
     status.state = "loaded";
-    status.msgBox = ref("");
+    status.msgBox = shallowRef(null);
     status.typing = shallowReactive(new Map());
     status.typingSince = null;
     status.scroll = null;
@@ -100,37 +100,14 @@ async function loadChannel(channelId, status) {
   }
 }
 
-export async function sendMessage(channelId) {
-  const status = channelStatuses.get(channelId);
-  if (!status) return;
-  if (!status.msgBox) return;
-
-  const msgBox = status.msgBox;
-  const msgContent = msgBox.value.trim();
-  
-  if (!msgContent) return;
-
-  msgBox.value = "";
-  status.scroll = null;
-
-  await request({
-    url: `/channels/${channelId}/messages`,
-    method: "POST",
-    body: {
-      content: msgContent
-    },
-    includeAuth: true
-  })
-}
-
-export function evalTyping(channelId) {
+export function evalTyping(channelId, nextText) {
   const status = channelStatuses.get(channelId);
 
   if (!status) return;
-  if (!status.typing || !status.msgBox) return;
+  if (!status.typing) return;
 
   const wasTyping = status.typingSince !== null;
-  const shouldBeTyping = !!status.msgBox.value.trim();
+  const shouldBeTyping = !!nextText.trim();
 
   if (shouldBeTyping !== wasTyping) {
     status.typingSince = shouldBeTyping ? Date.now() : null;
