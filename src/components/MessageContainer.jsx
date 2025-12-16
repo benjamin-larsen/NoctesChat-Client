@@ -1,6 +1,11 @@
 import { ref, nextTick } from "noctes.jsx";
 import { loadMore } from "../services/channels.js";
 import Avatar from "./Avatar.jsx";
+import Time from "./Time.jsx";
+import { isToday } from "./Time.jsx";
+
+// The maximum time that two messages can be apart before they are no longer grouped together.
+const TIME_WINDOW = 10 * 60 * 1000;
 
 async function updateScroll(ctx, skipTick = false) {
   if (!skipTick) await nextTick();
@@ -52,7 +57,8 @@ export default {
     const { messageInfo } = props;
 
     let lastMsg = null;
-    let seqCounter = 0;
+    let lastTimestamp = null;
+    let lastDate = null;
 
     return <>
     <div class="messageScroller" ref={ctx.el} onScroll={() => {
@@ -79,29 +85,32 @@ export default {
             messageInfo.messages.map(msg =>
             {
               try {
-                if (seqCounter >= 5) {
-                  seqCounter = 1;
-                  lastMsg = null;
-                }
+                const date = new Date(msg.timestamp);
 
-                if (lastMsg && lastMsg.author && msg.author && msg.author.id === lastMsg.author.id) {
-                  seqCounter++;
-
+                if (
+                  // Verify Author
+                  lastMsg && lastMsg.author && msg.author && msg.author.id === lastMsg.author.id &&
+                  // Verify Time Window
+                  lastDate && (msg.timestamp - lastMsg.timestamp) < TIME_WINDOW && isToday(date, lastDate) && lastDate
+                ) {
                   return <div key={msg.id} class="message leadingMessage">
-                    <span style="width: 40px; flex-shrink: 0;"></span>
+                    <span style="width: 40px; flex-shrink: 0; display: inline-block; position: relative;">
+                      <Time time={msg.timestamp} />
+                    </span>
                     <div class="messageInfo">
                       <p>${msg.content}</p>
                     </div>
                   </div>
-                } else {
-                  seqCounter = 1;
                 }
+
+                lastDate = date;
 
                 return <div key={msg.id} class="message">
                   <Avatar username={msg.author ? msg.author.username : "D"} status="#4CD964" />
                   <div class="messageInfo">
                     <span>
-                      ${msg.author ? msg.author.username : "Deleted User"}
+                      <span class="authorName">${msg.author ? msg.author.username : "Deleted User"}</span>
+                      <Time style="margin-left: 6px;" expanded={true} time={msg.timestamp} />
                     </span>
                     <p>${msg.content.trim()}</p>
                   </div>
