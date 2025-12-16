@@ -58,18 +58,7 @@ export async function ensureLoadUser() {
 
       const user = resp.body;
 
-      resp = await request({
-        url: "/channels",
-        includeAuth: true
-      });
-
-      if (resp.status != 200) throw new AuthError("Unable to fetch chanels.");
-
       authUser.value = user;
-
-      for (const channel of resp.body.channels) {
-        channels.set(channel.id, channel);
-      }
     } catch(e) {
       console.log("Error while trying to setup authentication.", e);
 

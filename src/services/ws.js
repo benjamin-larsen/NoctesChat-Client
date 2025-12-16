@@ -1,9 +1,17 @@
-import { ref, watch } from "noctes.jsx";
+import { reactive, ref, watch } from "noctes.jsx";
 
 import { auth, unsetAuth, authUser } from "./auth.js"
-import { channels, channelMessages, channelStatuses, sortMessages, syncChannel } from "./channels.js";
+import { channels, channelMessages, channelStatuses, sortMessages, syncChannel, deleteChannel } from "./channels.js";
 
 const WS_URL = import.meta.env.DEV ? "ws://localhost:5117/ws" : "/ws"
+
+export const presences = reactive(new Map());
+
+export function isOnline(userId) {
+  if (userId === authUser.value.id) return true;
+
+  return presences.get(userId) === "online";
+}
 
 export const WS_STATES = {
   inactive: 0,
@@ -18,6 +26,7 @@ class WebSocketManager {
     this.url = url;
     this.socket = null;
     this.authUser = null;
+    this.currentHeartbeat = null;
 
     this.openHook = () => this.onOpen();
     this.closeHook = () => this.onClose();
@@ -39,6 +48,11 @@ class WebSocketManager {
   onClose() {
     this.socket = null;
     this.authUser = null;
+
+    if (this.currentHeartbeat) {
+      clearInterval(this.currentHeartbeat);
+      this.currentHeartbeat = null;
+    }
 
     if (!authUser.value) {
       connState.value = WS_STATES.inactive;
@@ -66,10 +80,36 @@ class WebSocketManager {
           connState.value = WS_STATES.active;
           console.log("WebSocket Authenticated")
 
+          let channelIds = new Set();
+
+          for (const channel of json.channels) {
+            const members = new Map();
+
+            for (const member of channel.members) {
+              members.set(member.id, member);
+            }
+
+            channels.set(channel.id, {...channel, members})
+            channelIds.add(channel.id);
+          }
+
+          // Cleanup deleted channels
+          for (const [channelId, _] of channels) {
+            if (channelIds.has(channelId)) continue;
+            deleteChannel(channelId);
+          }
+
           for (const [channelId, status] of channelStatuses) {
             if (status.state !== "unsynced") continue;
             syncChannel(channelId);
           }
+
+          this.currentHeartbeat = setInterval(() => {
+            this.socket.send(JSON.stringify({
+              type: "heartbeat",
+              data: {}
+            }))
+          }, 30000);
           break;
         }
 
@@ -82,6 +122,11 @@ class WebSocketManager {
       }
     } else if (connState.value == WS_STATES.active) {
       switch (json.type) {
+        case "push_presence": {
+          presences.set(json.user, json.status);
+          break;
+        }
+
         case "start_typing": {
           if (json.member == this.authUser.id) return;
           
@@ -102,16 +147,37 @@ class WebSocketManager {
           break;
         }
 
-        case "update_channel":
+        case "update_channel": {
+          const prevChannel = channels.get(json.channel.id);
+          if (!prevChannel) return;
+
+          channels.set(json.channel.id, {...json.channel, members: prevChannel.members});
+          break;
+        }
+
         case "push_channel": {
-          channels.set(json.channel.id, json.channel);
+          const members = new Map();
+
+          for (const member of json.members) {
+            members.set(member.id, member);
+          }
+          
+          console.log({json, members})
+          channels.set(json.channel.id, {...json.channel, members});
+          break;
+        }
+
+        case "push_channel_member": {
+          // cache member here
+          const channel = channels.get(json.channel);
+          if (!channel) return;
+
+          channel.members
           break;
         }
 
         case "delete_channel": {
-          channels.delete(json.channel);
-          channelMessages.delete(json.channel);
-          channelStatuses.delete(json.channel);
+          deleteChannel(json.channel);
           break;
         }
 
@@ -135,6 +201,11 @@ class WebSocketManager {
   }
 
   abort() {
+    if (this.currentHeartbeat) {
+      clearInterval(this.currentHeartbeat);
+      this.currentHeartbeat = null;
+    }
+
     if (!this.socket) return;
     this.socket.removeEventListener("open", this.openHook);
     this.socket.removeEventListener("close", this.closeHook);

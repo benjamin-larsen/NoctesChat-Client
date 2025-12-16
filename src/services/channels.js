@@ -10,6 +10,12 @@ export const channels = reactive(new Map());
 export const channelMessages = reactive(new Map());
 export const channelStatuses = reactive(new Map());
 
+export function deleteChannel(channelId) {
+  channels.delete(channelId);
+  channelMessages.delete(channelId);
+  channelStatuses.delete(channelId);
+}
+
 export function sortMessages(messages) {
   let dedupe = new Set();
 
@@ -59,7 +65,9 @@ async function getOrFetchChannel(channelId) {
   if (resp.status === 404) throw new LoadError("Unknown Channel");
   if (resp.status !== 200) throw new LoadError("Unable to fetch channel");
 
-  channels.set(channelId, resp.body);
+  // try to fetch the WebSocket if its not here, likely WebSocket failed to subscribe user to Channel.
+
+  if (!channels.has(channelId)) channels.set(channelId, {...resp.body, members: new Map()});
 
   return resp.body;
 }

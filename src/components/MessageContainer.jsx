@@ -3,6 +3,7 @@ import { loadMore } from "../services/channels.js";
 import Avatar from "./Avatar.jsx";
 import Time from "./Time.jsx";
 import { isToday } from "./Time.jsx";
+import { isOnline } from "../services/ws.js";
 
 // The maximum time that two messages can be apart before they are no longer grouped together.
 const TIME_WINDOW = 10 * 60 * 1000;
@@ -95,7 +96,7 @@ export default {
                 ) {
                   return <div key={msg.id} class="message leadingMessage">
                     <span style="width: 40px; flex-shrink: 0; display: inline-block; position: relative;">
-                      <Time time={msg.timestamp} />
+                      <Time time={msg.timestamp} hidden={true} />
                     </span>
                     <div class="messageInfo">
                       <p>${msg.content}</p>
@@ -106,7 +107,7 @@ export default {
                 lastDate = date;
 
                 return <div key={msg.id} class="message">
-                  <Avatar username={msg.author ? msg.author.username : "D"} status="#4CD964" />
+                  <Avatar username={msg.author ? msg.author.username : "D"} status={isOnline(msg.author && msg.author.id) ? "#4CD964" : "#808080"} />
                   <div class="messageInfo">
                     <span>
                       <span class="authorName">${msg.author ? msg.author.username : "Deleted User"}</span>

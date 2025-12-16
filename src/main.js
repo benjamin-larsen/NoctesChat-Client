@@ -12,6 +12,7 @@ import MainView from './components/MainView.jsx'
 import CreateChannel from './components/CreateChannel.jsx'
 import Page404 from './components/404Page.jsx'
 import Channel from './components/Channel.jsx'
+import OverlayService from './components/OverlayService.jsx'
 
 usePlugin(router, {
   routes: [
@@ -53,5 +54,6 @@ usePlugin(router, {
 })
 
 new App(
-  root(RouterView, "#app")
+  root(RouterView, "#app"),
+  root(OverlayService, "#overlays")
 ).render()

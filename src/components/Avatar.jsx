@@ -5,7 +5,7 @@ export default {
     return <>
     <div className={"avatar" + (props.className ? `props.className ${props.className}` : "")} style={props.style}>
       <span>${getInitals(props.username, true)}</span>
-      <span class="avatarStatus" style={`background-color: ${props.status}`} />
+      { props.status ? <span class="avatarStatus" style={`background-color: ${props.status}`} /> : null }
     </div>
     </>
   }

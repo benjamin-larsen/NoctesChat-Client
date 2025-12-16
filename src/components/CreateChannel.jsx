@@ -72,7 +72,7 @@ export default {
         return;
       }
 
-      channels.set(resp.body.id, resp.body);
+      if (!channels.has(resp.body.id)) channels.set(resp.body.id, {...resp.body, members: new Map()});
 
       this.$router.navigate(`/channels/${resp.body.id}`);
     }

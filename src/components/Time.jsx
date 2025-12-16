@@ -73,6 +73,7 @@ export default {
     ctx.dateTime = ref("24:00");
     ctx.date = ref("01/01/2025");
     ctx.fullDate = ref("Wednesday, January 1, 2025 12:00 AM");
+    ctx.tooltipShown = ref(false);
 
     ctx.updateTime(props.time);
   },
@@ -84,12 +85,13 @@ export default {
   render(ctx, props) {
     const elProps = {...props};
     delete elProps.time;
+    delete elProps.hidden;
   
-    return <><Tooltip nSlot="show, hide, tempRef" mode="right">
+    return <><Tooltip nSlot="show, hide, tempRef" mode="right" onShow={() => ctx.tooltipShown.value = true} onLeave={() => ctx.tooltipShown.value = false}>
       <slot name='tooltip'>
-        <div style="padding: 6px 8px; background: white; color: black; border-radius: 6px;">${ctx.fullDate.value}</div>
+        <div style="padding: 6px 8px; background: #2f445a; color: white; border-radius: 6px;">${ctx.fullDate.value}</div>
       </slot>
-      <span ref={tempRef} onMouseenter={show} onMouseleave={hide} class={"time" + (!props.expanded ? " timeHidden" : "")} {...elProps}>${props.expanded ? `${ctx.date.value} ` : ""}${ctx.dateTime.value}</span>
+      <span ref={tempRef} onMouseenter={show} onMouseleave={hide} class={"time" + ((props.hidden && !ctx.tooltipShown.value) ? " timeHidden" : "")} {...elProps}>${props.expanded ? `${ctx.date.value} ` : ""}${ctx.dateTime.value}</span>
     </Tooltip></>
   }
 }

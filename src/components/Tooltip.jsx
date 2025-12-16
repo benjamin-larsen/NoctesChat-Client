@@ -7,6 +7,8 @@ export default {
 
       const { top, bottom, right, left, height, width } = this.templateRef.value.getBoundingClientRect();
 
+      this.$emit("show");
+
       if (this.props.mode === "top") {
         this.info.value = {
           top: top - 6,
@@ -35,6 +37,7 @@ export default {
     },
 
     hide() {
+      this.$emit("leave");
       this.info.value = null;
     }
   },
@@ -55,7 +58,8 @@ export default {
           left: `${info.left}px`,
           position: "absolute",
           transform: info.transform,
-          pointerEvents: "all"
+          pointerEvents: "all",
+          zIndex: ctx.props.overlay ? "5" : "0"
         }}>{slots.tooltip?.()}</div>
       </Teleport> : null}
     </Transition>
